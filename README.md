@@ -44,8 +44,8 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/tobiasGuta/Lean-Window
 
 ```powershell
 # Clone this repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/tobiasGuta/Lean-Windows-CTF-Toolkit-Automated-Setup.git
+cd Lean-Windows-CTF-Toolkit-Automated-Setup
 
 # Run the setup script as Administrator
 .\Setup-CTFToolkit.ps1
