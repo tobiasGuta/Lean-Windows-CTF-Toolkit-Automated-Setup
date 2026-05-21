@@ -289,4 +289,3 @@ Reverse engineering software you don't own or have permission to analyze may be 
 
 Happy hacking!
 If you found this useful, consider starring the repository!
-```
