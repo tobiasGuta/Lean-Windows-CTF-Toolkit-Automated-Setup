@@ -52,17 +52,17 @@ function Install-WingetPackage {
     param([string]$PackageId, [string]$DisplayName)
     Write-Step "Checking for $DisplayName..."
     
-    $check = Start-Process -FilePath "winget" -ArgumentList "list --id $PackageId" -Wait -PassThru -WindowStyle Hidden
+    # FIX APPLIED HERE: --accept-source-agreements bypasses the hidden first-time Winget prompt
+    $check = Start-Process -FilePath "winget" -ArgumentList "list --id $PackageId --accept-source-agreements" -Wait -PassThru -WindowStyle Hidden
+    
     if ($check.ExitCode -eq 0) {
         Write-Warning "$DisplayName is already installed - skipping"
         return $true
     }
     
     Write-Host "  Running winget install in background..." -ForegroundColor DarkGray
-    # Forcing --source winget to bypass the Microsoft Store 'fake Python' trap
     $process = Start-Process -FilePath "winget" -ArgumentList "install --id $PackageId --exact --source winget --accept-package-agreements --accept-source-agreements --silent" -Wait -PassThru -WindowStyle Hidden
     
-    # -1978335189 means 'Up to date'. -1978335212 means 'Already exists/Store Conflict'
     if ($process.ExitCode -eq 0 -or $process.ExitCode -eq -1978335189 -or $process.ExitCode -eq -1978335212) {
         Write-Success "$DisplayName successfully installed!"
         return $true
@@ -82,7 +82,7 @@ Write-Step "Preparing directory structure..."
 if (!(Test-Path $ToolsPath)) { New-Item -ItemType Directory -Path $ToolsPath | Out-Null }
 if (!(Test-Path $TempPath)) { New-Item -ItemType Directory -Path $TempPath | Out-Null }
 
-# System Prerequisites via Winget (Python 3 specific version ID fixes the crash)
+# System Prerequisites via Winget
 Install-WingetPackage -PackageId "EclipseAdoptium.Temurin.17.JDK" -DisplayName "Java 17 (for Ghidra)" | Out-Null
 Install-WingetPackage -PackageId "Python.Python.3.12" -DisplayName "Python 3.12" | Out-Null
 Install-WingetPackage -PackageId "Microsoft.VisualStudioCode" -DisplayName "Visual Studio Code" | Out-Null
@@ -118,10 +118,17 @@ if (Test-Path $x64dbgDir) { Write-Warning "x64dbg found - skipping" } else {
 
 # 3. DETECT IT EASY
 $dieDir = "$ToolsPath\DetectItEasy"
-if (Test-Path $dieDir) { Write-Warning "Detect It Easy found - skipping" } else {
+if (Test-Path $dieDir) {
+    Write-Warning "Detect It Easy found - skipping"
+} else {
     $zip = "$TempPath\die.zip"
-    $dieUrl = "https://github.com/horsicq/Detect-It-Easy/releases/download/3.09/die_win64_portable_3.09_x64.zip"
-    if (Download-File $dieUrl $zip "Detect It Easy") { Extract-Archive $zip $dieDir "Detect It Easy" | Out-Null }
+
+    # Permanent GitHub release URL
+    $dieUrl = "https://github.com/horsicq/DIE-engine/releases/download/3.21/die_win64_portable_3.21_x64.zip"
+
+    if (Download-File $dieUrl $zip "Detect It Easy") {
+        Extract-Archive $zip $dieDir "Detect It Easy" | Out-Null
+    }
 }
 
 # 4. DNSPYEX
